@@ -1,0 +1,98 @@
+//
+//  FileScrollerViewController.m
+//  FormationV2
+//
+//  Created by George Breen on 5/12/11.
+//  Copyright 2011 __MyCompanyName__. All rights reserved.
+//
+
+#import "FileScrollerViewController.h"
+
+
+@implementation FileScrollerView
+
+@synthesize addFolderButton, deleteButton, emailButton, copyButton, moveButton, fileTable0, fileTable1;
+
+#pragma mark - View lifecycle
+
+
+// Implement loadView to create a view hierarchy programmatically, without using a nib.
+
+
+/*
+- (void)loadView
+{
+    onScreen
+}
+
+ */ // Implement viewDidLoad to do additional setup after loading the view, typically from a nib.
+-(void) resetTable
+{
+    buttonBarOn = YES;
+    [self scrollBarOff:NO];
+}
+-(void) scrollBarOff: (BOOL) animated
+{
+    
+    if (buttonBarOn) {
+        CGRect r = buttonBar.frame;
+        r.origin.y -= kBarHeight;
+        buttonBar.frame = r;
+        r = tableViewport.frame;
+        r.origin.y -= kBarHeight;
+        r.size.height += kBarHeight;
+        tableViewport.frame = r;
+        buttonBarOn = NO;
+    }
+}
+-(void) scrollBarOn: (BOOL) animated
+{
+    
+    if (buttonBarOn == NO) {
+        CGRect r = buttonBar.frame;
+        r.origin.y += kBarHeight;
+        buttonBar.frame = r;
+        r = tableViewport.frame;
+        r.origin.y += kBarHeight;
+        r.size.height -= kBarHeight;
+        tableViewport.frame = r;
+        buttonBarOn = YES;
+    }
+}
+
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return YES;
+}
+
+/*
+// Implement viewDidLoad to do additional setup after loading the view, typically from a nib.
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+}
+*/
+
+
+-(void) deleteSelected
+{}
+-(void) emailSelected
+{}
+-(void) copySelected
+{}
+-(void) moveSelected
+{}
+-(void) addFolderSelected
+{}
+-(void) makePortfolioSelected
+{
+}
+-(void) editButtonSelected
+{
+    [self scrollBarOn:YES];
+}
+-(void)setPath:(NSString *)path andMode:(int)mode
+{}
+@end

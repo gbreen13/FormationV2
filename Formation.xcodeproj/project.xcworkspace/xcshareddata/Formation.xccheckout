@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>5CE72952-C723-4AE8-80A1-9EB622367B91</string>
+	<key>IDESourceControlProjectName</key>
+	<string>Formation</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>910F63DE-4306-4C11-9E02-4EE7A222AF19</key>
+		<string>http://rabbithillsolutions.unfuddle.com/svn/rabbithillsolutions_formation/Formation/Classes/Formation.xcdatamodel</string>
+		<key>A09D778A-FAFE-4318-9068-5BE23A861551</key>
+		<string>http://rabbithillsolutions.unfuddle.com/svn/rabbithillsolutions_formation/FormationV2</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>Formation.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>910F63DE-4306-4C11-9E02-4EE7A222AF19</key>
+		<string>../../Formation.xcdatamodel</string>
+		<key>A09D778A-FAFE-4318-9068-5BE23A861551</key>
+		<string>../..</string>
+	</dict>
+	<key>IDESourceControlProjectRepositoryRootDictionary</key>
+	<dict>
+		<key>910F63DE-4306-4C11-9E02-4EE7A222AF19</key>
+		<string>http://rabbithillsolutions.unfuddle.com/svn/rabbithillsolutions_formation</string>
+		<key>A09D778A-FAFE-4318-9068-5BE23A861551</key>
+		<string>http://rabbithillsolutions.unfuddle.com/svn/rabbithillsolutions_formation</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>http://rabbithillsolutions.unfuddle.com/svn/rabbithillsolutions_formation/FormationV2/Formation.xcodeproj</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>A09D778A-FAFE-4318-9068-5BE23A861551</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.subversion</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>A09D778A-FAFE-4318-9068-5BE23A861551</string>
+			<key>IDESourceControlWCCName</key>
+			<string>FormationV2</string>
+		</dict>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.subversion</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>910F63DE-4306-4C11-9E02-4EE7A222AF19</string>
+			<key>IDESourceControlWCCName</key>
+			<string>Formation</string>
+		</dict>
+	</array>
+</dict>
+</plist>

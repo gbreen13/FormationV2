@@ -1,0 +1,230 @@
+//
+//  PdfPage.m
+//  Formation
+//
+//  Created by George Breen on 1/19/11.
+//  Copyright 2011 Rabbit Hill Solutions, Inc. All rights reserved.
+//
+
+#import "PdfPage.h"
+#import "PdfAnnotation.h"
+
+
+@implementation PdfPage
+@synthesize cGPDFpageRef, pageDictionary, objectNumber, generationNumber, original;
+@synthesize Annots, AnnotsRefArray, cGPDGpageDictionary, Group, reader, myContentView;
+@synthesize scrollview;
+
+-(id) initWithObjno: (int) on andGeneration: (int) gen andDictionary: (PdfDictionary *) fdict andReader: (PdfReader*)r
+{
+	if((self = [super init]) == nil) 
+		return nil;
+	
+	objectNumber = on;
+	generationNumber = gen;
+	pageDictionary = fdict;
+
+	reader = r;
+	PdfObject *pObj;
+	Annots = [[NSMutableArray alloc]init];
+	
+	if((pObj = [pageDictionary objectForKey:@"/MediaBox"])!= nil)
+		MediaBox = [PdfReader getPdfRect:(PdfArray *) pObj];
+	
+	if((pObj = [pageDictionary objectForKey:@"/Annots"])!= nil) {
+		if([pObj isKindOfClass:[PdfReference class]])	// get the array from the references.
+			pObj = [reader GetPdfObjectFromReference: (PdfReference *)pObj];
+
+		[(PdfArray *)pObj removeRedundancies];
+		
+		if([pObj isKindOfClass:[PdfArray class]]) {
+			AnnotsRefArray = (PdfArray *)pObj;
+		}
+	}
+
+	self.original = [self toString];
+	
+	[reader addPageObject:self];				// Put the object back into the original reader's page array.
+	return self;
+}
+
+-(BOOL) hasChanged
+{
+	return [original isEqualToString:[self toString]];
+}
+
+-(NSString *)toString
+{
+	return [self GetString];
+}
+
+/*
+ *	Ouput everything from the original dictionary EXCEPT the annotaations directory.
+ */
+
+-(NSString *)GetString
+{
+	NSString *rets = [NSString stringWithFormat:@"%@", [pageDictionary toString]];	
+	return rets;
+}
+
+
+- (UIView *)viewForZoomingInScrollView:(UIScrollView *)scrollView
+{
+    return myContentView;
+}
+
+- (void)scrollViewDidEndZooming:(UIScrollView*)scrollView withView:(UIView*)view atScale:(float)relScale
+{
+//	[self updateResolutions];
+
+		
+		
+	for(id obj in Annots) {
+		[obj reScale:relScale];	// draw annotations and forms.
+	}
+	
+}
+- (void)drawLayer:(CALayer *)layer inContext:(CGContextRef)ctx
+{
+	CGContextSetRGBFillColor(ctx, 1.0, 1.0, 1.0, 1.0);
+    CGContextFillRect(ctx, CGContextGetClipBoundingBox(ctx));
+    CGContextTranslateCTM(ctx, 0.0, layer.bounds.size.height);
+    CGContextScaleCTM(ctx, 1.0, -1.0);
+    CGContextConcatCTM(ctx, CGPDFPageGetDrawingTransform([reader myPageRef], kCGPDFCropBox, layer.bounds, 0, true));
+	CGContextScaleCTM(ctx, 1.0, 1.0);
+	[self drawWithContext:ctx];
+}
+-(void) PdfPageLoadPage:(CGPDFPageRef)page withView:(UIView *)view
+{
+	if(view == nil)	{	// special case, quiet load.
+		myContentView = nil;
+		return;
+	}
+	cGPDFpageRef = page;
+	cGPDGpageDictionary = CGPDFPageGetDictionary(page);
+//
+//	Now that we have a page loaded, we need to create the tiled view for drawing.
+//
+	CGRect pageRect =  CGRectIntegral(CGPDFPageGetBoxRect(cGPDFpageRef, kCGPDFCropBox));
+
+    CATiledLayer *tiledLayer = [CATiledLayer layer];
+    tiledLayer.delegate = self;
+    tiledLayer.tileSize = CGSizeMake(1024.0, 1024.0);
+    tiledLayer.levelsOfDetail = 1000;
+    tiledLayer.levelsOfDetailBias = 1000;
+    tiledLayer.frame = pageRect;
+    
+    myContentView = [[UIView alloc] initWithFrame:pageRect];
+    [myContentView.layer addSublayer:tiledLayer];
+	
+    CGRect viewFrame = view.frame;
+    viewFrame.origin = CGPointZero;
+    scrollView = [[UIScrollView alloc] initWithFrame:viewFrame];
+    scrollView.delegate = self;
+    scrollView.contentSize = pageRect.size;
+    scrollView.maximumZoomScale = 1000;
+    [scrollView addSubview:myContentView];
+	
+    [view addSubview:scrollView];				// add to the view.
+	
+	[self loadAnnots];
+
+	CGPDFInteger pageRotate = 0;
+	CGPDFDictionaryGetInteger( cGPDGpageDictionary, "Rotate", &pageRotate ); 
+	pageRect = CGRectIntegral( CGPDFPageGetBoxRect( cGPDFpageRef, kCGPDFMediaBox ));
+	if( pageRotate == 90 || pageRotate == 270 ) {
+		CGFloat temp = pageRect.size.width;
+		pageRect.size.width = pageRect.size.height;
+		pageRect.size.height = temp;
+	}
+	
+	for(id obj in Annots) {
+		[obj addToView:myContentView withPageRect:pageRect];	// draw annotations and forms.
+	}
+}
+
+-(void) PdfPageUnloadPage
+{
+	if(myContentView == nil) return;				// stealth open
+	[myContentView removeFromSuperview];
+	[scrollView release];
+	[myContentView release]; 
+//	[Annots removeAllObjects];
+//	[AnnotsRefArray removeAllObjects];
+}
+
+//
+//	We will load up the annotations for this page.  For each annotation, we will
+//	also check the formAnnotations dictionary to see if this annotation is registered.
+//	If it is, we will use the form field in the dictionary and NOT the annotation.
+//	This is because the annotation information was subsumed into the form information
+//	when the form field was parsed.
+//
+//	When we ultimately save the file, the original annotation will be deleted and the
+//	newly modified form field will be saved with all of the annotation information.
+//
+-(void) loadAnnots
+{
+
+	[Annots removeAllObjects];
+	
+	for(PdfReference *nextannot in AnnotsRefArray) {
+		PdfField *fieldAnnot;
+		if((fieldAnnot = [reader GetFormAnnotation:nextannot.objNumber])!= nil) {
+			if(![Annots containsObject:fieldAnnot])
+				[Annots addObject:fieldAnnot];
+			else {
+				NSLog(@"already there");
+			}
+
+		} else {
+			PdfDictionary *annotationDictionary = (PdfDictionary *)[reader GetPdfObjectFromReference:nextannot];	// pull the dictionary
+			PdfAnnotation *an = [[[PdfAnnotation alloc ]initWithObjno:nextannot.objNumber andGeneration:nextannot.generationNumber andDictionary:annotationDictionary] autorelease];
+			if(![Annots containsObject:an])
+				[Annots addObject:an];
+			else {
+				NSLog(@"already there");
+			}
+		}
+	}
+
+}
+
+-(void) drawWithContext: (CGContextRef) ctx
+{
+	CGContextDrawPDFPage(ctx, cGPDFpageRef);		// draw everything BUT annotations and FormFields
+/*
+	CGPDFInteger pageRotate = 0;
+	CGPDFDictionaryGetInteger( cGPDGpageDictionary, "Rotate", &pageRotate ); 
+	CGRect pageRect = CGRectIntegral( CGPDFPageGetBoxRect( cGPDFpageRef, kCGPDFMediaBox ));
+	if( pageRotate == 90 || pageRotate == 270 ) {
+		CGFloat temp = pageRect.size.width;
+		pageRect.size.width = pageRect.size.height;
+		pageRect.size.height = temp;
+	}
+	
+	for(id obj in Annots) {
+		[obj drawWithContext:ctx andPageRect:pageRect andRotation:pageRotate];	// draw annotations and forms.
+	}
+*/
+
+}
+// TBD
+-(NSMutableArray *)GetNewAnnots
+{
+	return nil;
+}
+-(NSMutableArray *)GetChangedAnnots
+{
+	return nil;
+}
+
+
+-(void) dealloc
+{
+	[Annots release];
+	[super dealloc];
+}
+
+@end

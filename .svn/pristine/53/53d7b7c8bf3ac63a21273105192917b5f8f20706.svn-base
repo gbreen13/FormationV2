@@ -1,0 +1,56 @@
+//
+//  FileScrollerViewController.h
+//  FormationV2
+//
+//  Created by George Breen on 5/12/11.
+//  Copyright 2011 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#include "FileScrollerTable.h"
+
+#define kFormMode 1
+#define kFolderMode 2
+#define kPortfolioMode 3
+
+#define kBarHeight 44
+
+@interface FileScrollerView : UIView <UITableViewDataSource, UITableViewDelegate> {
+    int folderMode;
+    
+    IBOutlet FileScrollerTable *fileTable0, *fileTable1;
+    int onScreen;               // ping pong visible table for scrolling purposes
+    BOOL buttonBarOn;
+    
+    NSString *curpath;
+    
+    IBOutlet UIView *buttonBar;
+    IBOutlet UIView *tableViewport;
+    IBOutlet UIButton *deleteButton;
+    IBOutlet UIButton *emailButton;
+    IBOutlet UIButton *copyButton;
+    IBOutlet UIButton *moveButton; 
+    IBOutlet UIButton *addFolderButton;
+    IBOutlet UIButton *makePortfolioButton;
+    IBOutlet UIBarButtonItem *editButton;
+    
+    IBOutlet UINavigationBar *navBar;
+}
+
+@property (nonatomic, retain) UIButton *deleteButton, *emailButton, *copyButton, *moveButton, *addFolderButton;
+@property (nonatomic, retain) FileScrollerTable *fileTable0, *fileTable1;
+
+-(IBAction) deleteSelected;
+-(IBAction) emailSelected;
+-(IBAction) copySelected;
+-(IBAction) moveSelected;
+-(IBAction) addFolderSelected;
+-(IBAction) makePortfolioSelected;
+-(IBAction) editButtonSelected;
+
+-(void) setPath: (NSString *)path andMode:(int) mode;
+-(void) scrollBarOff: (BOOL) animated;
+-(void) scrollBarOn: (BOOL) animated;
+-(void) resetTable;
+
+@end
